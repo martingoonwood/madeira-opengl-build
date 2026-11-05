@@ -17,40 +17,12 @@ jobs:
         with:
           xcode-version: '15.4'
 
-      - name: Brute-Force Code Patch & Compile
+      - name: Compile Custom IPA
+        env:
+          # Directly forces the compiler tools to utilize the C++20 standard globally
+          CMAKE_CXX_FLAGS: "-std=c++20"
+          CMAKE_C_FLAGS: "-std=c17"
         run: |
-          TARGET_FILE_1="FEX/FEXCore/include/FEXCore/Utils/SpinWaitLock.h"
-          TARGET_FILE_2="FEX/FEXCore/include/FEXCore/Utils/WritePriorityMutex.h"
-
-          for FILE in "$TARGET_FILE_1" "$TARGET_FILE_2"; do
-            if [ -f "$FILE" ]; then
-              # Create a clean patch header file using a multi-line heredoc
-              cat << 'EOF' > patch_header.h
-#pragma once
-#include <atomic>
-#include <cstdint>
-namespace std {
-    template<typename T>
-    struct atomic_ref {
-        T* ptr;
-        atomic_ref(T& obj) : ptr(&obj) {}
-        T load() const { return *ptr; }
-        void store(T val) { *ptr = val; }
-        bool compare_exchange_strong(T& expected, T desired) {
-            if (*ptr == expected) { *ptr = desired; return true; }
-            expected = *ptr; return false;
-        }
-    };
-}
-EOF
-              # Prepend the patch header to the original source file safely
-              cat patch_header.h "$FILE" > "$FILE.tmp"
-              mv "$FILE.tmp" "$FILE"
-              rm patch_header.h
-              echo "Successfully patched $FILE directly."
-            fi
-          done
-
           chmod +x ./tools/build-ipa.sh
           ./tools/build-ipa.sh
 
