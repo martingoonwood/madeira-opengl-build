@@ -17,12 +17,14 @@ jobs:
         with:
           xcode-version: '15.4'
 
-      - name: Compile Custom IPA
+      - name: Force Prepend C++20 to FEX & Compile
         run: |
-          # Inject the C++20 requirement natively into the underlying build script
-          export DC_CFLAGS="-std=c17"
-          export DC_CXXFLAGS="-std=c++20"
-          
+          # Inject C++20 right at the beginning of FEX's build setup
+          if [ -f FEX/CMakeLists.txt ]; then
+            echo -e "set(CMAKE_CXX_STANDARD 20)\nset(CMAKE_CXX_STANDARD_REQUIRED ON)\n$(cat FEX/CMakeLists.txt)" > FEX/CMakeLists.txt
+            echo "Successfully injected C++20 into the top of FEX CMakeLists.txt"
+          fi
+
           chmod +x ./tools/build-ipa.sh
           ./tools/build-ipa.sh
 
