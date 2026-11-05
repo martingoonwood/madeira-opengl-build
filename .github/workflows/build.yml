@@ -17,12 +17,14 @@ jobs:
         with:
           xcode-version: '15.4'
 
-      - name: Force Prepend C++20 to FEX & Compile
+      - name: Safely Force C++20 in FEX & Compile
         run: |
-          # Inject C++20 right at the beginning of FEX's build setup
+          # Safely insert C++20 flags to line 1 without expanding or breaking internal text strings
           if [ -f FEX/CMakeLists.txt ]; then
-            echo -e "set(CMAKE_CXX_STANDARD 20)\nset(CMAKE_CXX_STANDARD_REQUIRED ON)\n$(cat FEX/CMakeLists.txt)" > FEX/CMakeLists.txt
-            echo "Successfully injected C++20 into the top of FEX CMakeLists.txt"
+            printf "set(CMAKE_CXX_STANDARD 20)\nset(CMAKE_CXX_STANDARD_REQUIRED ON)\n" > FEX/CMakeLists.txt.tmp
+            cat FEX/CMakeLists.txt >> FEX/CMakeLists.txt.tmp
+            mv FEX/CMakeLists.txt.tmp FEX/CMakeLists.txt
+            echo "Successfully prepended C++20 without altering existing file syntax."
           fi
 
           chmod +x ./tools/build-ipa.sh
