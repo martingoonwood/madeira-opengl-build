@@ -18,11 +18,11 @@ jobs:
           xcode-version: '15.4'
 
       - name: Compile Custom IPA
-        env:
-          # Sets C++20 strictly for modern submodules like FEX without poisoning the Wine config scripts
-          CMAKE_CXX_FLAGS: "-std=c++20"
-          CXXFLAGS: "-std=c++20"
         run: |
+          # Inject the C++20 requirement natively into the underlying build script
+          export DC_CFLAGS="-std=c17"
+          export DC_CXXFLAGS="-std=c++20"
+          
           chmod +x ./tools/build-ipa.sh
           ./tools/build-ipa.sh
 
