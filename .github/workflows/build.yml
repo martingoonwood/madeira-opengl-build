@@ -1,15 +1,16 @@
-name: Build Madeira OpenGL Commit IPA
+name: Build Madeira OpenGL Branch IPA
 on: [workflow_dispatch]
 
 jobs:
   build:
     runs-on: macos-14
     steps:
-      - name: Checkout Specific Graphics Commit
+      - name: Checkout Codex Graphics Branch
         uses: actions/checkout@v4
         with:
           repository: 'willfaust/Madeira'
-          ref: '7ed32a9be9e0729525b80d6bc726cc3a844ffaad'
+          # Target the exact development branch holding the integrated graphics overhauls
+          ref: 'codex/graphics-build-integration'
           submodules: 'recursive'
 
       - name: Setup Xcode
@@ -17,11 +18,7 @@ jobs:
         with:
           xcode-version: '15.4'
 
-      - name: Compile Custom IPA
-        env:
-          # Directly forces the compiler tools to utilize the C++20 standard globally
-          CMAKE_CXX_FLAGS: "-std=c++20"
-          CMAKE_C_FLAGS: "-std=c17"
+      - name: Compile Integrated IPA
         run: |
           chmod +x ./tools/build-ipa.sh
           ./tools/build-ipa.sh
@@ -29,5 +26,5 @@ jobs:
       - name: Upload Finished IPA
         uses: actions/upload-artifact@v4
         with:
-          name: OpenGL-Madeira-7ed32a9-IPA
+          name: OpenGL-Madeira-Graphics-Integration-IPA
           path: dist/Madeira.ipa
