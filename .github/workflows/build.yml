@@ -17,15 +17,14 @@ jobs:
         with:
           xcode-version: '15.4'
 
-      - name: Safely Force C++20 in FEX & Compile
+      - name: Overwrite All Hardcoded FEX C++ Standards & Compile
         run: |
-          # Safely insert C++20 flags to line 1 without expanding or breaking internal text strings
-          if [ -f FEX/CMakeLists.txt ]; then
-            printf "set(CMAKE_CXX_STANDARD 20)\nset(CMAKE_CXX_STANDARD_REQUIRED ON)\n" > FEX/CMakeLists.txt.tmp
-            cat FEX/CMakeLists.txt >> FEX/CMakeLists.txt.tmp
-            mv FEX/CMakeLists.txt.tmp FEX/CMakeLists.txt
-            echo "Successfully prepended C++20 without altering existing file syntax."
-          fi
+          # Recursively find every CMakeLists.txt file inside FEX and swap 17 for 20 standard declarations
+          find FEX -name "CMakeLists.txt" -type f -exec sed -i '' 's/cxx_std_17/cxx_std_20/g' {} +
+          find FEX -name "CMakeLists.txt" -type f -exec sed -i '' 's/CXX_STANDARD 17/CXX_STANDARD 20/g' {} +
+          find FEX -name "CMakeLists.txt" -type f -exec sed -i '' 's/set(CMAKE_CXX_STANDARD 17)/set(CMAKE_CXX_STANDARD 20)/g' {} +
+          
+          echo "All internal FEX target properties systematically upgraded to C++20."
 
           chmod +x ./tools/build-ipa.sh
           ./tools/build-ipa.sh
