@@ -17,18 +17,37 @@ jobs:
         with:
           xcode-version: '15.4'
 
-      - name: Brute-Force Code Modification & Compile
+      - name: Brute-Force Code Patch & Compile
         run: |
-          # Directly modify the code files to provide a fallback definition if the compiler locks to C++17
           TARGET_FILE_1="FEX/FEXCore/include/FEXCore/Utils/SpinWaitLock.h"
           TARGET_FILE_2="FEX/FEXCore/include/FEXCore/Utils/WritePriorityMutex.h"
 
           for FILE in "$TARGET_FILE_1" "$TARGET_FILE_2"; do
             if [ -f "$FILE" ]; then
-              # Inject a macro at line 1 that maps atomic_ref to a standard atomic pointer wrapper if it's missing
-              printf "#include <atomic>\nnamespace std { template<typename T> using atomic_ref = atomic<T>; }\n$(cat "$FILE")" > "$FILE.tmp"
+              # Create a clean patch header file using a multi-line heredoc
+              cat << 'EOF' > patch_header.h
+#pragma once
+#include <atomic>
+#include <cstdint>
+namespace std {
+    template<typename T>
+    struct atomic_ref {
+        T* ptr;
+        atomic_ref(T& obj) : ptr(&obj) {}
+        T load() const { return *ptr; }
+        void store(T val) { *ptr = val; }
+        bool compare_exchange_strong(T& expected, T desired) {
+            if (*ptr == expected) { *ptr = desired; return true; }
+            expected = *ptr; return false;
+        }
+    };
+}
+EOF
+              # Prepend the patch header to the original source file safely
+              cat patch_header.h "$FILE" > "$FILE.tmp"
               mv "$FILE.tmp" "$FILE"
-              echo "Patched $FILE source code directly."
+              rm patch_header.h
+              echo "Successfully patched $FILE directly."
             fi
           done
 
