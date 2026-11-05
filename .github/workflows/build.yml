@@ -1,0 +1,29 @@
+name: Build Madeira OpenGL Commit IPA
+on: [workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: macos-14
+    steps:
+      - name: Checkout Specific Graphics Commit
+        uses: actions/checkout@v4
+        with:
+          repository: 'willfaust/Madeira'
+          ref: '7ed32a9be9e0729525b80d6bc726cc3a844ffaad'
+          submodules: 'recursive'
+
+      - name: Setup Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: 'latest'
+
+      - name: Compile Custom IPA
+        run: |
+          chmod +x ./tools/build-ipa.sh
+          ./tools/build-ipa.sh
+
+      - name: Upload Finished IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: OpenGL-Madeira-7ed32a9-IPA
+          path: dist/Madeira.ipa
