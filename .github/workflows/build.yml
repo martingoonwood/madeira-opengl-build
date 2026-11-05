@@ -17,7 +17,11 @@ jobs:
         with:
           xcode-version: 'latest'
 
-      - name: Compile Custom IPA
+      - name: Compile Custom IPA with C++20 Enforcement
+        env:
+          # Forces the compiler to allow C++20 primitives like std::atomic_ref
+          CXXFLAGS: "-std=c++20"
+          CFLAGS: "-std=c23"
         run: |
           chmod +x ./tools/build-ipa.sh
           ./tools/build-ipa.sh
